@@ -30,3 +30,6 @@ def home():
 # App… startup complete: la app se inicio correctamente
 # Ahora le damos ctrl + click al ip port que nos apareció y de ahí podremos ir a la pestana del navegador a ver.
 #Esto con lo que nos responde el navegador en el IP port, es un archivo JSON que tiene una llave Hello y un valor World
+
+
+#Ahora veremos los Path Operations
