@@ -26,16 +26,21 @@ from typing import Optional
 from enum import Enum
 
 #Pydantic
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, EmailStr
+from pydantic.types import PaymentCardNumber
 
 #FastAPI
 from fastapi import FastAPI
 from fastapi import Body, Query, Path
 
 
+
 app = FastAPI()
 
 #Models
+
+class EmailPaypal(EmailStr):
+    Paypal = "email"
 
 class HairColor(Enum):
     white = "white"
@@ -46,9 +51,21 @@ class HairColor(Enum):
 
 #Location Model
 class Location(BaseModel):
-    city: str
-    state: str
-    country: str
+    city: str = Field(
+        ...,
+        min_length=1,
+        max_length=50
+    )
+    state: str = Field(
+        ...,
+        min_length=1,
+        max_length=50
+    )
+    country: str = Field(
+        ...,
+        min_length=1,
+        max_length=50
+    )
 
 #Person Model
 class Person(BaseModel):
@@ -69,6 +86,7 @@ class Person(BaseModel):
     )
     hair_color: Optional[HairColor] = Field(default=None)
     is_married: Optional[bool] = Field(default=None)
+    paypal: Optional[EmailPaypal] = Field(default=None)
 
 @app.get("/")
 def home():
