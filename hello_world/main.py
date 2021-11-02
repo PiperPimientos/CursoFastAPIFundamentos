@@ -1,20 +1,16 @@
-#Request Body Automaticos
-
-# Recordemos cuando en swagger UI, cada vez que queríamos mandar un Request Body a nuestra API, teníamos que rellenar los datos manualmente. Por ejemplo rellenando los datos de Person, lo teníamos que hacer de manera manual.
-# Podemos automatizar este proceso asi:
-# 1.	Iremos al modelo que queremos automarizar, que para este caso será Person. Al final crearemos una subclase llamada Config. y esta subclase tendra un atributo llamado schema_extra, que nos sirve para definir esta información por defecto para la documentación.
-# Este schema_extra será igual a un JSON. Dentro del JSON definiremos para un tipo en particular de nombre, el test que le queremos hacer, es decir, si contiene ciertos atributos
-# Adentro colocaremos esos atributos con su llave y su respectivo valor.
-# Hasta el momento, si revisamos en la documentación interactiva, no tendra ningún cambio, esto es porque swagger no cargara los ejemplos si tenemos dos request body en un path operation, pero si por ejemplo comentamos en el path operation todo el request body de location y dejamos solo el path operation de person, si puede funcionar
-# Hasta el momento, podemos rellenar de ejemplos a todo el modelo completo que queramos hacer de ejemplo. Pero podemos hacer ejemplos en cada uno de los campos del modelo en particular
-# Si agregamos en los parámetros de Field de cada atributo, el parámetro example=”Nombre”, veremos que esto estará funcionando.
-
-# RETO
-# Elaborar los ejemplo para el request body del location
-
-# Para los Query y Path parameters, los ejemplos se hacen de la misma forma.
-# Veamos por ejemplo las validaciones de Query Parameters
-# 1.	Debajo de la descripción del parámetro name, de la path operation function show_person de la path operation de este endpoint /person/detail, agregaremos el example, que será igual a Rocio por ejemplo.
+#Response Model
+# Seguiremos en el mismo repositorio de nuestro antiguo curso de FastAPI fundamentos. Para continuar simplemente haremos una nueva rama de git, que le daremos el nombre de response_model.
+# Tenemos un path operation muy importante en nuestra API, que es la que tiene una path operation function de create_person, en /person/new. Esta recibe un request body, que tiene el modelo de Person.
+# Esta persona que se va registrar tiene que tener una contraseña. Por lo que deberíamos tener un atributo mas en nuestro modelo de Person, que le llamaremos password.
+# Password será obligatorio, será un string y será igual a un Field de nuestro modelo, que va contener como parámetros, obligatorio . . . y un min_Length=8.
+# Si ahora nos vamos a nuestra documentación interactiva y revisamos el endpoint. Si intentamos ingresar en nuestro request body nuestra contraseña, estará bien, pero en el response body obtendremos la contraseña tal y como el cliente la envio, y esto es un problema de seguridad.
+ 
+# Hay que tener varias cosas importantes en cuenta a partir de aquí. Primero, jamás se le debe enviar la contraseña a un cliente, es peligroso, porque es un problema de seguridad. Y segundo, jamás se debe almacenar la contraseña que nos da el usuario en texto plano. La contraseña se almacena en un hash.
+# Para arreglarlo, podemos hacerlo mediante un response model, que es un atributo de nuestra path operation y se coloca dentro del path operation decorator.
+# Despues de nuestra ruta de /person/new”, vamos a agregar response_model= que lleva adentro un modelo de pydantic, va ser un modelo que contenga todos los datos de la persona, pero sin la contraseña, este modelo Pydantic se llamara PersonOut, pero no existe vamos a crearlo.
+# Iremos hasta los Models de la API y debajo del modelo Person, crearemos class PersonOut(BaseModel), que hereda de BaseModel:
+# Haremos un salto de línea y copiaremos todos los atributos que teníamos en el modelo Person, y lo pegaremos como atributo de PersonOut y, finalmente, le eliminaremos la contraseña porque no tendremos una contraseña como respuesta.
+# Y si ahora ejecutamos nuestra path operation e introducimos una contraseña en el request body, veremos que en el response body no tendremos visible la contraseña
 
 
 #Python
@@ -97,6 +93,7 @@ class Person(BaseModel):
     hair_color: Optional[HairColor] = Field(default=None)
     is_married: Optional[bool] = Field(default=None)
     paypal: Optional[EmailPaypal] = Field(default=None)
+    password: str = Field(..., min_Length=8)
 
     # class Config:
     #     schema_extra = {
@@ -109,13 +106,36 @@ class Person(BaseModel):
     #         }
     #     }
 
+class PersonOut(BaseModel):
+    first_name: str = Field(
+        ...,
+        min_length=1,
+        max_length=50,
+        example="Miguel"
+    )
+    last_name: str = Field(
+        ...,
+        min_length=1,
+        max_length=50,
+        example="Perez"
+    )
+    age: int = Field(
+        ...,
+        gt=0,
+        Le=115,
+        example=30
+    )
+    hair_color: Optional[HairColor] = Field(default=None)
+    is_married: Optional[bool] = Field(default=None)
+    paypal: Optional[EmailPaypal] = Field(default=None)
+
 @app.get("/")
 def home():
     return {"Hello": "World"}
 
 #Request and Response body
 
-@app.post("/person/new")
+@app.post("/person/new", response_model=PersonOut)
 def create_person(person: Person = Body(...)):
     return person
 
