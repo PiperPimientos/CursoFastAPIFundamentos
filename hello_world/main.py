@@ -1,24 +1,16 @@
-#Validaciones: Models
+#Request Body Automaticos
 
-# Vimos como combinar dos request bodys en una misma path operation, pero tenemos que saber validar perfectamente los atributos de un request body.
-# Esto estará en el nuevo git Branch, “validations_models”, porque vamos a aprender a validar los modelos.
-# 1.	Cuando nosotros vamos a validar un request body tenemos que hacerlo directamente en la definición del modelo(clase) que nosotros utilizamos para ese request body. 
-# 2.	Vamos a validar todos los atributos que tiene Person. Para ello necesitaremos una nueva clase pydantic, que será Field. Field es exactamente igual a Body, Query y Path pero esta directamente relacionada a los modelos de pydantic.
-# 3.	En nuestro Modelo colocaremos al final de todos los atributos un igual seguido del nombre de la clase pydantic, Field
-# Por ejemplo:
-# first_name: str = Field(…, min_Length=)
-# Y el constructor lleva exactamente los mismos atributos de la clase Query y path, es decir que será obligatorio, luego que tendremos un min_length y luego un max_length, la mismas validaciones. Ahora age, tendrá una validación distinta, que serán: obligatorio y que la edad tiene que ser greater than (gt), 0. y menor o igual que 115
-# 4.	Para hair color y para is married, sabemos que son opcionales. 
-# Para el caso particular de is married utilizaremos la sintaxis de Field, al cual le tendríamos que agregar como parámetro un default=None
-# Sin embargo para hair color, sabemos que es un string que debe ser validada, pero hay muchos tipos de hair color, y para ello utilizaremos una nueva clase que viene directamente de Python. Tendremos que llamar el modulo enum para importar la clase Enum
-# Enum nos sirve para crear enumeraciones de strings, asi poder definir las validaciones del atributo de hair color.
-# Dentro de models vamos a tener que crear una nueva clase llamada HairColor(Enum), que contendrá esas posibles validaciones
-# “white” = “white”
-# “brown” = “brown”
-# Y asi con los demás colores de pelo,
-# 5.	Luego en el Model de person, sin bien hair color es Optional, lo cambiaremos por un Field y este Field va tener por default, None. Y el tipo ya no será str sino HairColor, esto nos asegura que esas validaciones sean del tipo que definimos en el Model HairColor
+# Recordemos cuando en swagger UI, cada vez que queríamos mandar un Request Body a nuestra API, teníamos que rellenar los datos manualmente. Por ejemplo rellenando los datos de Person, lo teníamos que hacer de manera manual.
+# Podemos automatizar este proceso asi:
+# 1.	Iremos al modelo que queremos automarizar, que para este caso será Person. Al final crearemos una subclase llamada Config. y esta subclase tendra un atributo llamado schema_extra, que nos sirve para definir esta información por defecto para la documentación.
+# Este schema_extra será igual a un JSON. Dentro del JSON definiremos para un tipo en particular de nombre, el test que le queremos hacer, es decir, si contiene ciertos atributos
+# Adentro colocaremos esos atributos con su llave y su respectivo valor.
+# Hasta el momento, si revisamos en la documentación interactiva, no tendra ningún cambio, esto es porque swagger no cargara los ejemplos si tenemos dos request body en un path operation, pero si por ejemplo comentamos en el path operation todo el request body de location y dejamos solo el path operation de person, si puede funcionar
+# Hasta el momento, podemos rellenar de ejemplos a todo el modelo completo que queramos hacer de ejemplo. Pero podemos hacer ejemplos en cada uno de los campos del modelo en particular
+# Si agregamos en los parámetros de Field de cada atributo, el parámetro example=”Nombre”, veremos que esto estará funcionando.
 
-# Si ahora nos vamos a la documentación interactiva. Y si vamos a ver nuestro request body, veremos que swagger automáticamente nos muestra la nueva estructura, si por ejemplo vemos que hair_color por defecto aparece white:
+# RETO
+# Elaborar los ejemplo para el request body del location
 
 
 #Python
@@ -27,7 +19,6 @@ from enum import Enum
 
 #Pydantic
 from pydantic import BaseModel, Field, EmailStr
-from pydantic.types import PaymentCardNumber
 
 #FastAPI
 from fastapi import FastAPI
@@ -54,39 +45,65 @@ class Location(BaseModel):
     city: str = Field(
         ...,
         min_length=1,
-        max_length=50
+        max_length=50,
+        example="Medellin"
     )
     state: str = Field(
         ...,
         min_length=1,
-        max_length=50
+        max_length=50,
+        example="Antioquia"
     )
     country: str = Field(
         ...,
         min_length=1,
-        max_length=50
+        max_length=50,
+        example="Colombia"
     )
+
+    # class Config:
+    #     schema_extra = {
+    #         "example": {
+    #             "city": "Medellin",
+    #             "state": "Antioquia",
+    #             "country": "Colombia",
+    #         }
+    #     }
 
 #Person Model
 class Person(BaseModel):
     first_name: str = Field(
         ...,
         min_length=1,
-        max_length=50
+        max_length=50,
+        example="Miguel"
     )
     last_name: str = Field(
         ...,
         min_length=1,
-        max_length=50
+        max_length=50,
+        example="Perez"
     )
     age: int = Field(
         ...,
         gt=0,
-        Le=115
+        Le=115,
+        example=30
     )
     hair_color: Optional[HairColor] = Field(default=None)
     is_married: Optional[bool] = Field(default=None)
     paypal: Optional[EmailPaypal] = Field(default=None)
+
+    # class Config:
+    #     schema_extra = {
+    #         "example": {
+    #             "first_name": "Felipe",
+    #             "last_name": "Restrepo",
+    #             "age": 23,
+    #             "hair_color": "black",
+    #             "is_married": False
+    #         }
+    #     }
 
 @app.get("/")
 def home():
@@ -141,8 +158,9 @@ def update_person(
         gt=0
     ),
     person: Person = Body(...),
-    location: Location = Body(...)
+    # location: Location = Body(...)
 ):
-    results = person.dict()
-    results.update(location.dict())
-    return results
+    # results = person.dict()
+    # results.update(location.dict())
+    # return results
+    return person
