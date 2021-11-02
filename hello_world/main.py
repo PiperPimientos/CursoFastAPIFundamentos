@@ -12,6 +12,10 @@
 # RETO
 # Elaborar los ejemplo para el request body del location
 
+# Para los Query y Path parameters, los ejemplos se hacen de la misma forma.
+# Veamos por ejemplo las validaciones de Query Parameters
+# 1.	Debajo de la descripción del parámetro name, de la path operation function show_person de la path operation de este endpoint /person/detail, agregaremos el example, que será igual a Rocio por ejemplo.
+
 
 #Python
 from typing import Optional
@@ -124,7 +128,8 @@ def show_person(
         min_Length=1, 
         max_Length=50,
         title="Person Name",
-        description="This is the person name. Its Between 1 and 50 characters"
+        description="This is the person name. Its Between 1 and 50 characters",
+        example="Rocio"
         ),
     age: str = Query(
         ...,
