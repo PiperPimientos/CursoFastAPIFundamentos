@@ -1,16 +1,22 @@
-#Response Model
-# Seguiremos en el mismo repositorio de nuestro antiguo curso de FastAPI fundamentos. Para continuar simplemente haremos una nueva rama de git, que le daremos el nombre de response_model.
-# Tenemos un path operation muy importante en nuestra API, que es la que tiene una path operation function de create_person, en /person/new. Esta recibe un request body, que tiene el modelo de Person.
-# Esta persona que se va registrar tiene que tener una contraseña. Por lo que deberíamos tener un atributo mas en nuestro modelo de Person, que le llamaremos password.
-# Password será obligatorio, será un string y será igual a un Field de nuestro modelo, que va contener como parámetros, obligatorio . . . y un min_Length=8.
-# Si ahora nos vamos a nuestra documentación interactiva y revisamos el endpoint. Si intentamos ingresar en nuestro request body nuestra contraseña, estará bien, pero en el response body obtendremos la contraseña tal y como el cliente la envio, y esto es un problema de seguridad.
- 
-# Hay que tener varias cosas importantes en cuenta a partir de aquí. Primero, jamás se le debe enviar la contraseña a un cliente, es peligroso, porque es un problema de seguridad. Y segundo, jamás se debe almacenar la contraseña que nos da el usuario en texto plano. La contraseña se almacena en un hash.
-# Para arreglarlo, podemos hacerlo mediante un response model, que es un atributo de nuestra path operation y se coloca dentro del path operation decorator.
-# Despues de nuestra ruta de /person/new”, vamos a agregar response_model= que lleva adentro un modelo de pydantic, va ser un modelo que contenga todos los datos de la persona, pero sin la contraseña, este modelo Pydantic se llamara PersonOut, pero no existe vamos a crearlo.
-# Iremos hasta los Models de la API y debajo del modelo Person, crearemos class PersonOut(BaseModel), que hereda de BaseModel:
-# Haremos un salto de línea y copiaremos todos los atributos que teníamos en el modelo Person, y lo pegaremos como atributo de PersonOut y, finalmente, le eliminaremos la contraseña porque no tendremos una contraseña como respuesta.
-# Y si ahora ejecutamos nuestra path operation e introducimos una contraseña en el request body, veremos que en el response body no tendremos visible la contraseña
+#Status Code
+
+# El status code es ese pequeño numero de 3 digitos que le indica al cliente que paso con la respuesta de esa petición HTTP.
+# Basicamente lo que hace la API es hacer el response que contiene casi siempre un JSON, deberíamos tener distintos status code que nos indiquen como salieron las cosas.
+# Dentro de una centena de status code, podemos encontrar otros casos especiales:
+# 201: Algo se creo (created), por ejemplo si estamos en una path operation desde el cliente al servidor, que envia una petición de tipo post y en esa petición creamos un usuario y guardamos el usuario en la base de datos, el servidor responde 201.
+# 204: No content. Es decir que no hay ninguna respuesta, aunque todo haya salido bien.
+# 404: Accedimos a un endpoint que no existe. (No exists)
+# 422: Validation error. Es decir que el cliente nos envia un dato que no esta en el formato que esperábamos. Por ejemplo si esperábamos un validation de no mas de 20 caracteres y le llega al server de 21 caracteres.
+#  Ahora haremos un git checkout -b para nuestra nueva Branch, que se llamara status_code. 
+# Lo que haremos es que cada una de las path operations tenga un status code personalizado. 
+# 1.	Importamos el modulo de fastapi, status. Que nos permite acceder a los diferentes status code de http para poder ingresarlos en nuestras path operations.
+# 2.	Los status code se colocan en el path operation decorator, justo despues del endpoint
+# la sintaxis seria asi: @app.get(“/”, status_code=status.HTTP_200_OK)
+# 3.	Para “/” utilizaremos el 200
+# Aquí un truco: si al endpoint le agregamos path=, quedara mucho mas ordenado en las líneas de código
+# 4.	Para /person/new vamos a ponerle 201 CREATED, porque este endpoint es para crear una persona en nuestra base de datos
+# 5.	Para el de  /person/detail vamos a ponerle 200
+# 6.	RETO: ponerle el status code al resto de Path operations
 
 
 #Python
@@ -22,7 +28,7 @@ from pydantic import BaseModel, Field, EmailStr
 
 #FastAPI
 from fastapi import FastAPI
-from fastapi import Body, Query, Path
+from fastapi import Body, Query, Path, status
 
 
 
@@ -70,8 +76,8 @@ class Location(BaseModel):
     #         }
     #     }
 
-#Person Model
-class Person(BaseModel):
+#PersonBase
+class PersonBase(BaseModel):
     first_name: str = Field(
         ...,
         min_length=1,
@@ -93,6 +99,9 @@ class Person(BaseModel):
     hair_color: Optional[HairColor] = Field(default=None)
     is_married: Optional[bool] = Field(default=None)
     paypal: Optional[EmailPaypal] = Field(default=None)
+
+#Person Model
+class Person(PersonBase):
     password: str = Field(..., min_Length=8)
 
     # class Config:
@@ -106,42 +115,38 @@ class Person(BaseModel):
     #         }
     #     }
 
-class PersonOut(BaseModel):
-    first_name: str = Field(
-        ...,
-        min_length=1,
-        max_length=50,
-        example="Miguel"
-    )
-    last_name: str = Field(
-        ...,
-        min_length=1,
-        max_length=50,
-        example="Perez"
-    )
-    age: int = Field(
-        ...,
-        gt=0,
-        Le=115,
-        example=30
-    )
-    hair_color: Optional[HairColor] = Field(default=None)
-    is_married: Optional[bool] = Field(default=None)
-    paypal: Optional[EmailPaypal] = Field(default=None)
+class PersonOut(PersonBase):
+    pass
 
-@app.get("/")
+
+#Path Operations
+
+#Home
+
+@app.get(
+    #El path= es para que quede mucho mas ordenado
+    path="/", 
+    status_code=status.HTTP_200_OK
+    )
 def home():
     return {"Hello": "World"}
 
 #Request and Response body
 
-@app.post("/person/new", response_model=PersonOut)
+@app.post(
+    "/person/new", 
+    response_model=PersonOut,
+    status_code=status.HTTP_201_CREATED
+    )
 def create_person(person: Person = Body(...)):
     return person
 
 # Validaciones: Query Parameters
 
-@app.get("/person/detail")
+@app.get(
+    "/person/detail",
+    status_code=status.HTTP_200_OK
+    )
 def show_person( 
     name: Optional[str] = Query(
         None, 
@@ -161,7 +166,10 @@ def show_person(
 
 # Validations: Path Parameters
 
-@app.get("/person/detail/{person_id}")
+@app.get(
+    "/person/detail/{person_id}",
+    status_code=status.HTTP_200_OK
+    )
 def show_person(
             person_id: int = Path(
                 ..., 
@@ -174,7 +182,10 @@ def show_person(
 
 # Validaciones: Request Body
 
-@app.put("/person/{person_id}")
+@app.put(
+    "/person/{person_id}",
+    status_code=status.HTTP_200_OK
+    )
 def update_person(
     person_id: int = Path(
         ...,
