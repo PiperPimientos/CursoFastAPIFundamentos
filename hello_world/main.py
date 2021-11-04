@@ -1,27 +1,38 @@
-#Cookie and Header parameters
+#File and UploadFile
 
-# Ya aprendimos como ingresar datos a la API mediante path parameters, query parameters, request bodys y formularios. Hay fuentes de datos todavía mas exóticas. Son dos cookies y headers parameters.
-# Por ejemplos header ya los hemos visto, es una parte de una petición o respuesta http que contiene datos sobre ella, como por ejemplo la fecha en que se hizo, en que formato viene, siendo esto último por ejemplo que vimos que swagger UI nos muestra si la application era un JSON o era un formulario. Tambien existen otros, como el user agent que nos dice quien esta entrando a nuestra web y quien esta usando nuestra API. 
-# Una cookie es una pieza de código pequeña que un servidor mete en el PC cuando estamos navegando en el PC, esos datos van a ser útiles para facilitar la navegación en una pagina web despues de la primera vez.
-# Las clases para trabajar con cookies y headers en FastAPI, son esas mismas, cookies y headers.
-# Crearemos un git checkout -b “cookie_and_headers_parameters”.
-# 1.	Vamos a crear los Cookies and Headers Parameters. Vamos a crear toda la path operation.
-# 2.	El path operation decorator será de tipo .post porque vamos a trabajar con un envio de información desde el frontend hacia el servidor.
-# El path será /contact, pues vamos a crear un formulario de contacto de la pagina web.
-# El status code de esta response será 200
-# 3.	Ahora haremos nuestro path operation function.
-# En sus parámetros necesitaremos el first_name, que es el nombre de la persona, y como viene de un formulario será entonces un Form. Dentro de los parámetros de este form tendremos que es obligatorio . . ., max_Length=20, min_length=1.
-# Haremos el otro parámetro que será last_name, con las mismas propiedades del anterior.
-# Vamos a pedir también el email, para ello utilizaremos ese tipo de dato exotico de pydantic que es EmailStr y que igual será un Form, que a su vez tendra parámetro de ser obligatorio.
-# Luego Sigue el Message que será un str y también va ser un Form, que será obligatorio, tendra un min_length=20. Este será el mensaje que nos envie el usuario
-# Ahora agregaremos el primer header, que será el user_agent, que nos dira quien esta intentando usar a esta parte de la API. Por el momento colocaremos que será Optional[str] y que será un = Header. Para ello tendremos que importar esta clase de fastapi y de paso también vamos a importar Cookie. El valor por default de Header va ser None, porque a veces puede venir y a veces no.
-# Por ultimo tendremos un parámetro llamado ads que va a controlar las cookies que nos envia el servidor que esta trabajando con la API. el ads será de tipo Optional[str] y será una = Cookie, con parámetro default None.
-# Ahora, dentro de la funcion, simplemente retornaremos user_agent
-# Nota: Recordemos que ppara utilizar el EmailStr tenemos que tener instalado el pydantic email en la terminal con “pip install pydantic[email]”
-# 4.	Si vamos a nuestra documentación interactiva encontraremos que tenemos un nuevo path operation que será de tipo post y estará en /contact. Tendra dos parámetros que ingresar, que corresponderán al de header y cookie. En user_agent no le pondremos nada, lo capturara por defecto. En ads colocaremos “This is the info that is tracking you”.
-# Luego podremos ver el formulario con el first name, last name, email, message, en message por ejemplo “I am Felipe and Im trying to learn FastAPI in python”.
-# Si vemos el response body veremos que nos retorna, tal y como dijimos en el código, el user_agent. Nos aparece el valor de la cabecera http user_agent de la petición post de la PC de la persona que esta usando la API. Nos dice por ejemplo si estamos en Windows.
+# Ya hemos aprendido mucho sobre transferencia de datos en API, con path y query parameters, request body, formularios, headers y cookies, pero nos falta algo mas que ver. Los archivos.
+# Por ejemplo si tenemos una aplicación donde tenemos que subir un video, tendremos que subir un archivo.
+# La palabras claves son en FastAPI, File y UploadFile, ambos son clases. Ambas sirven para controlar el flujo de entrada de archivos desde el cliente hasta el sevidor.
+# UploadFile tiene una serie de parámetros:
+# -Filename: nombre del archivo. Con este tendremos control del nombre del archivo
+# -Content_type: el tipo de archivo que puede ser por ejemeplo jpg, mp4, gif.
+# -File: Se corresponde al archivo en si mismo, es decir, acceder a todos los datos del archivo.
 
+
+# Antes que nada un nuevo git checkout -b “File_and_UploadFile”.
+# 1.	Crearemos un nuevo path operation que será de método .post, porque vamos a trabajar enviando datos desde el cliente hasta el servidor.
+# El path será /post-image. Es decir que si las personas entran a este endpoint, van a ser capaces de subir una imagen.
+# 2.	Importaremos de fastapi las clases UploadFile(que será el tipo) y File(que será la clase)
+# 3.	La P. O Function será post_image y como parámetros:
+# image que será de tipo UploadFile y será igual a la clase File
+# 4.	En la funcion retornaremos un diccionario que será convertido por FastAPI a JSON, que contenga las siguientes llaves y valores.
+# Las llaves seran los parámetros que vimos en la clase anterior de UploadFile
+# “Filename”: image.filename,
+# “Format: image.content_type,
+# “Size(kb)”: len(image.file.read()),  #Para poder acceder al tamaño de este archivo, además de acceder al archivo con el método .file utilizaremos la funcion .read() nativa de Python, y con la funcion len(), vamos a envolver a toda la funcion para obtener la cantidad de bytes del archivo.
+# 5.	Si nos vamos a la documentación interactiva veremos ya el path operation en /post-image
+# Veremos que no tenemos parámetros y que el Request Body es un multipart/form-data y no un application/json o un form.
+# Cuando le damos try it out, vemos que Swagger UI ya nos da una herramienta para poder elegir el archivo desde el pc. Nos da un botón como si ya estuviera perfectamente trabajado desde el frontend.
+ 
+# Si subimos un archivo y le damos execute, nuestra path operation debería subirnos el archivo y darnos un response body con lo que pedimos retornar, que es Filename, Format y Size(kb).
+ 
+
+# Sin embargo, vemos que el response nos esta mostrando el tamaño en bytes y nosotros lo pedimos en kilobytes. Para corregir esto, hacemos una operación matemática.
+# Envolvemos el valor del diccionario Size(kb), en un round(), función nativa se Python que nos permite redondear números, pero además para poder que nos muestre cuantos kilobytes son, a partir de los bytes del mismo tenemos que dividir la cantidad de bytes entre 1024, esto nos dara la cantidad de kilobytes.
+# Ademas a la funcion round le vamos a pasar el parámetro ndigits= , es decir cuántos dígitos despues de la coma quiero visualizar dentro de la API. Y le daremos un valor de 2.
+# Y ahora si nos mostrara lo que pesa en kb nuestra imagen
+
+#Con esto terminamos todos los tipos de entradas de datos que tenemos en FastAPI
 
 #Python
 from typing import Optional
@@ -33,7 +44,7 @@ from pydantic import BaseModel, Field, EmailStr
 
 #FastAPI
 from fastapi import FastAPI
-from fastapi import Body, Query, Path, status, Form, Header, Cookie
+from fastapi import Body, Query, Path, status, Form, Header, Cookie, File, UploadFile
 
 
 
@@ -250,3 +261,19 @@ def contact(
     ads: Optional[str] = Cookie(default=None)
 ):
     return user_agent
+
+
+#File and UploadFile
+
+@app.post(
+    path="/post-image"
+)
+def post_image(
+    image: UploadFile = File(...)
+):
+    return {
+        "Filename": image.filename,
+        "Format": image.content_type,
+        "Size(kb)": round(len(image.file.read())/1024, ndigits=2)
+    }
+
