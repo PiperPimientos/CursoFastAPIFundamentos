@@ -1,28 +1,4 @@
-#Summary and Description. Docstrings
-
-
-# Si vamos por ejemplo al path operation de /person/new, que vemos que este mal? Que podríamos ordenar para que esto este ordenado y prolijo?
- 
-# Necesitamos explicarle al usuario de la API como utilizar esta path operation. Pues la persona que llegue y vea el código, que quiera usar la API, se va preguntar que tiene que hacer.
-# Dentro de Python hay un concepto llamado docstring, que es la documentación de las funciones. Es un concepto que se puede extrapolar a cualquier aspecto de Python. Es una muy buena practica.
-# Para crear un docstring, antes del contenido de la funcion introducimos las triple comillas  ‘ ‘ ‘. Esto lo vimos en pensamiento computacional, además. 
-# La estructura de un docstring es, Titulo, Descripcion, Parametros, Resultado.
-# Antes que nada, haremos una nueva Branch que será git checkout -b “summary_and_description”
-# Vamos a hacer el ejemplo sobre /person/new
-# 1.	Agregaremos las pautas mencionadas para el docstring, justo despues de la definición de la path operation function:
-# ‘ ‘ ‘
-# 1-	Titulo: Create Person
-# 2-	Descripcion: This path operation creates a person in the app and save the information in the database
-# 3-	Parametros: 
-# -	Request Body parameter:
-#        -**person: Person** -> A person model with first, last name,                age, haricolor, ismarried.
-# 4-	Resultado: returns a person model with first name, last name, age, hair color and marital status.
-# ‘ ‘ ‘
-# Este es el docstring.
-# Ademas veremos un nuevo parámetro para la path operation decorator que se llama summary=, que nos permite colocarle un titulo personalizado a esta funcion.
-# Por ejemplo, agregaremos summary=”Create person in the app”..
-# Ahora nos vamos a ir a nuestra documentación interactiva. Y si vamos a person/new, veremos que por ejemplo ya esta el titulo personalizado de summary que nosotros le colocamos
-# RETO: Documentar todas las demás path operations
+#Deprecate Path Operation
 
 
 
@@ -186,7 +162,8 @@ def create_person(person: Person = Body(...)):
 @app.get(
     "/person/detail",
     status_code=status.HTTP_200_OK,
-    tags=["Persons"]
+    tags=["Persons"],
+    deprecated=True
     )
 def show_person( 
     name: Optional[str] = Query(
