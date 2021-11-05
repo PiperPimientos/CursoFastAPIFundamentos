@@ -1,19 +1,19 @@
-#HTTPException
+#Ordenar los Tags
 
-# Que pasa si un usuario de nuestra aplicación intenta acceder a un dato que no existe o un dato que no tiene permiso. Para esto FastAPI nos da una clase muy útil que es HTTPException. Esta clase nos ayuda a controlar el funcionamiento de los errores dentro de FastAPI.
-# Lo primero es importar la clase HTTPException de fastapi.
-# Hay errores que tienen un status code del orden de 400, ahí es donde utilizaremos HTTPException para que nuestras path operation queden mas completas.
-# Vamonos por ejemplo a las validaciones de Path parameters que esta en el path /person/detail/{person_id}. Aquí no hay ninguna lógica, simplemente decimos que tiene que ser mayor a 0 ese person id, y que un ejemplo podría ser 123.
-# Pero además, podríamos validar que no existe ningún person_id y que aparezca por ejemplo un 404. Para eso vamos a crear una lista en esa misma validación que diga por ejemplo las personas que si se han registrado, es decir los person_id que si existen. Ejemplo: persons = [1, 2, 3, 4, 5]
-# Por lo tanto, vamos a cambiar un poco la lógica de nuestro path operation.
-# Antes del return vamos a poner una condicional, diciendo:
-# if person_id not in persons:
-#                 raise HTTPException() 
-# Recordemos que cuando trabajamos con excepciones, no hacemos un return sino que hacemos un raise.
-# Ese HTTPException va tener los parámetros de status_code en 404. Luego un detail que va contener “This person doesnt exist”
-# Ya con esto nos podemos ir a la documentación interactiva y veremos en nuestro /person/detail/{person_id} que si ingresamos un person_id que no esta dentro de la lista persons, nos saldrá como response un 404.
+# Si vemos nuestra documentación interactiva, veremos que hay algo que no tiene ningún tipo de sentido:
+ 
+# Esto es que las etiquetas no tienen ningún tipo de orden. Las path operation están todas desordenadas.
+# Haremos, primero que todo, un nuevo Branch llamado tags.
+# 1.	Vamos a tomar todas las path operations de personas y las vamos a clasificar bajo un nuevo parámetro del path operation decorator.
+# por ejemplo, si nos vamos al path operation /person/new, justo del status_code, vamos a colocar un nuevo parámetro que será
+# tags=[“Persons”]
+# Alli contenemos un nombre que servirá para clasificar.
+# Copy y luego vamos a pegarla en todas las path operation que contegan person
+# Si recargamos la pagina de nuestra documentación interactiva veremos que ahora tenemos una sección de etiquetas llamada persons
+ 
+# RETO: Colocar etiquetas a todos los demás path operations.
 
-#Con esta clase fastapi HTTPException es suficiente para manejar cualquier error que tenga el cliente
+
 
 #Python
 from typing import Optional
@@ -131,7 +131,8 @@ class LoginOut(BaseModel):
 @app.get(
     #El path= es para que quede mucho mas ordenado
     path="/", 
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
+    tags=["Home"]
     )
 def home():
     return {"Hello": "World"}
@@ -141,7 +142,8 @@ def home():
 @app.post(
     "/person/new", 
     response_model=PersonOut,
-    status_code=status.HTTP_201_CREATED
+    status_code=status.HTTP_201_CREATED,
+    tags=["Persons"]
     )
 def create_person(person: Person = Body(...)):
     return person
@@ -150,7 +152,8 @@ def create_person(person: Person = Body(...)):
 
 @app.get(
     "/person/detail",
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
+    tags=["Persons"]
     )
 def show_person( 
     name: Optional[str] = Query(
@@ -173,7 +176,8 @@ def show_person(
 persons = [1, 2, 3, 4, 5]
 @app.get(
     "/person/detail/{person_id}",
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
+    tags=["Persons"]
     )
 def show_person(
             person_id: int = Path(
@@ -194,7 +198,8 @@ def show_person(
 
 @app.put(
     "/person/{person_id}",
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
+    tags=["Persons"]
     )
 def update_person(
     person_id: int = Path(
@@ -216,7 +221,8 @@ def update_person(
 @app.post(
     path="/login",
     response_model=LoginOut,
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
+    tags=["Login"]
 )
 def login(username: str = Form(...), password: str = Form(...)):
     return LoginOut(username=username)
@@ -226,6 +232,7 @@ def login(username: str = Form(...), password: str = Form(...)):
 @app.post(
     path="/contact",
     status_code=status.HTTP_200_OK,
+    tags=["Cookies and Headers"]
 )
 def contact(
     first_name: str = Form(
@@ -252,7 +259,8 @@ def contact(
 #File and UploadFile
 
 @app.post(
-    path="/post-image"
+    path="/post-image",
+    tags=["Files"]
 )
 def post_image(
     image: UploadFile = File(...)
