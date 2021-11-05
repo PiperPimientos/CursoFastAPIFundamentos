@@ -1,38 +1,19 @@
-#File and UploadFile
+#HTTPException
 
-# Ya hemos aprendido mucho sobre transferencia de datos en API, con path y query parameters, request body, formularios, headers y cookies, pero nos falta algo mas que ver. Los archivos.
-# Por ejemplo si tenemos una aplicación donde tenemos que subir un video, tendremos que subir un archivo.
-# La palabras claves son en FastAPI, File y UploadFile, ambos son clases. Ambas sirven para controlar el flujo de entrada de archivos desde el cliente hasta el sevidor.
-# UploadFile tiene una serie de parámetros:
-# -Filename: nombre del archivo. Con este tendremos control del nombre del archivo
-# -Content_type: el tipo de archivo que puede ser por ejemeplo jpg, mp4, gif.
-# -File: Se corresponde al archivo en si mismo, es decir, acceder a todos los datos del archivo.
+# Que pasa si un usuario de nuestra aplicación intenta acceder a un dato que no existe o un dato que no tiene permiso. Para esto FastAPI nos da una clase muy útil que es HTTPException. Esta clase nos ayuda a controlar el funcionamiento de los errores dentro de FastAPI.
+# Lo primero es importar la clase HTTPException de fastapi.
+# Hay errores que tienen un status code del orden de 400, ahí es donde utilizaremos HTTPException para que nuestras path operation queden mas completas.
+# Vamonos por ejemplo a las validaciones de Path parameters que esta en el path /person/detail/{person_id}. Aquí no hay ninguna lógica, simplemente decimos que tiene que ser mayor a 0 ese person id, y que un ejemplo podría ser 123.
+# Pero además, podríamos validar que no existe ningún person_id y que aparezca por ejemplo un 404. Para eso vamos a crear una lista en esa misma validación que diga por ejemplo las personas que si se han registrado, es decir los person_id que si existen. Ejemplo: persons = [1, 2, 3, 4, 5]
+# Por lo tanto, vamos a cambiar un poco la lógica de nuestro path operation.
+# Antes del return vamos a poner una condicional, diciendo:
+# if person_id not in persons:
+#                 raise HTTPException() 
+# Recordemos que cuando trabajamos con excepciones, no hacemos un return sino que hacemos un raise.
+# Ese HTTPException va tener los parámetros de status_code en 404. Luego un detail que va contener “This person doesnt exist”
+# Ya con esto nos podemos ir a la documentación interactiva y veremos en nuestro /person/detail/{person_id} que si ingresamos un person_id que no esta dentro de la lista persons, nos saldrá como response un 404.
 
-
-# Antes que nada un nuevo git checkout -b “File_and_UploadFile”.
-# 1.	Crearemos un nuevo path operation que será de método .post, porque vamos a trabajar enviando datos desde el cliente hasta el servidor.
-# El path será /post-image. Es decir que si las personas entran a este endpoint, van a ser capaces de subir una imagen.
-# 2.	Importaremos de fastapi las clases UploadFile(que será el tipo) y File(que será la clase)
-# 3.	La P. O Function será post_image y como parámetros:
-# image que será de tipo UploadFile y será igual a la clase File
-# 4.	En la funcion retornaremos un diccionario que será convertido por FastAPI a JSON, que contenga las siguientes llaves y valores.
-# Las llaves seran los parámetros que vimos en la clase anterior de UploadFile
-# “Filename”: image.filename,
-# “Format: image.content_type,
-# “Size(kb)”: len(image.file.read()),  #Para poder acceder al tamaño de este archivo, además de acceder al archivo con el método .file utilizaremos la funcion .read() nativa de Python, y con la funcion len(), vamos a envolver a toda la funcion para obtener la cantidad de bytes del archivo.
-# 5.	Si nos vamos a la documentación interactiva veremos ya el path operation en /post-image
-# Veremos que no tenemos parámetros y que el Request Body es un multipart/form-data y no un application/json o un form.
-# Cuando le damos try it out, vemos que Swagger UI ya nos da una herramienta para poder elegir el archivo desde el pc. Nos da un botón como si ya estuviera perfectamente trabajado desde el frontend.
- 
-# Si subimos un archivo y le damos execute, nuestra path operation debería subirnos el archivo y darnos un response body con lo que pedimos retornar, que es Filename, Format y Size(kb).
- 
-
-# Sin embargo, vemos que el response nos esta mostrando el tamaño en bytes y nosotros lo pedimos en kilobytes. Para corregir esto, hacemos una operación matemática.
-# Envolvemos el valor del diccionario Size(kb), en un round(), función nativa se Python que nos permite redondear números, pero además para poder que nos muestre cuantos kilobytes son, a partir de los bytes del mismo tenemos que dividir la cantidad de bytes entre 1024, esto nos dara la cantidad de kilobytes.
-# Ademas a la funcion round le vamos a pasar el parámetro ndigits= , es decir cuántos dígitos despues de la coma quiero visualizar dentro de la API. Y le daremos un valor de 2.
-# Y ahora si nos mostrara lo que pesa en kb nuestra imagen
-
-#Con esto terminamos todos los tipos de entradas de datos que tenemos en FastAPI
+#Con esta clase fastapi HTTPException es suficiente para manejar cualquier error que tenga el cliente
 
 #Python
 from typing import Optional
@@ -44,7 +25,7 @@ from pydantic import BaseModel, Field, EmailStr
 
 #FastAPI
 from fastapi import FastAPI
-from fastapi import Body, Query, Path, status, Form, Header, Cookie, File, UploadFile
+from fastapi import Body, Query, Path, status, Form, Header, Cookie, File, UploadFile, HTTPException
 
 
 
@@ -189,7 +170,7 @@ def show_person(
     return {name: age}
 
 # Validations: Path Parameters
-
+persons = [1, 2, 3, 4, 5]
 @app.get(
     "/person/detail/{person_id}",
     status_code=status.HTTP_200_OK
@@ -202,6 +183,11 @@ def show_person(
                 description="Showing id person"
                 ),          
 ):
+    if person_id not in persons:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="This person doesnt exist"
+        )
     return {person_id: "It exists!"}
 
 # Validaciones: Request Body
