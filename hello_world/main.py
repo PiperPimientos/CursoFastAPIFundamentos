@@ -1,17 +1,28 @@
-#Ordenar los Tags
+#Summary and Description. Docstrings
 
-# Si vemos nuestra documentación interactiva, veremos que hay algo que no tiene ningún tipo de sentido:
+
+# Si vamos por ejemplo al path operation de /person/new, que vemos que este mal? Que podríamos ordenar para que esto este ordenado y prolijo?
  
-# Esto es que las etiquetas no tienen ningún tipo de orden. Las path operation están todas desordenadas.
-# Haremos, primero que todo, un nuevo Branch llamado tags.
-# 1.	Vamos a tomar todas las path operations de personas y las vamos a clasificar bajo un nuevo parámetro del path operation decorator.
-# por ejemplo, si nos vamos al path operation /person/new, justo del status_code, vamos a colocar un nuevo parámetro que será
-# tags=[“Persons”]
-# Alli contenemos un nombre que servirá para clasificar.
-# Copy y luego vamos a pegarla en todas las path operation que contegan person
-# Si recargamos la pagina de nuestra documentación interactiva veremos que ahora tenemos una sección de etiquetas llamada persons
- 
-# RETO: Colocar etiquetas a todos los demás path operations.
+# Necesitamos explicarle al usuario de la API como utilizar esta path operation. Pues la persona que llegue y vea el código, que quiera usar la API, se va preguntar que tiene que hacer.
+# Dentro de Python hay un concepto llamado docstring, que es la documentación de las funciones. Es un concepto que se puede extrapolar a cualquier aspecto de Python. Es una muy buena practica.
+# Para crear un docstring, antes del contenido de la funcion introducimos las triple comillas  ‘ ‘ ‘. Esto lo vimos en pensamiento computacional, además. 
+# La estructura de un docstring es, Titulo, Descripcion, Parametros, Resultado.
+# Antes que nada, haremos una nueva Branch que será git checkout -b “summary_and_description”
+# Vamos a hacer el ejemplo sobre /person/new
+# 1.	Agregaremos las pautas mencionadas para el docstring, justo despues de la definición de la path operation function:
+# ‘ ‘ ‘
+# 1-	Titulo: Create Person
+# 2-	Descripcion: This path operation creates a person in the app and save the information in the database
+# 3-	Parametros: 
+# -	Request Body parameter:
+#        -**person: Person** -> A person model with first, last name,                age, haricolor, ismarried.
+# 4-	Resultado: returns a person model with first name, last name, age, hair color and marital status.
+# ‘ ‘ ‘
+# Este es el docstring.
+# Ademas veremos un nuevo parámetro para la path operation decorator que se llama summary=, que nos permite colocarle un titulo personalizado a esta funcion.
+# Por ejemplo, agregaremos summary=”Create person in the app”..
+# Ahora nos vamos a ir a nuestra documentación interactiva. Y si vamos a person/new, veremos que por ejemplo ya esta el titulo personalizado de summary que nosotros le colocamos
+# RETO: Documentar todas las demás path operations
 
 
 
@@ -135,6 +146,16 @@ class LoginOut(BaseModel):
     tags=["Home"]
     )
 def home():
+    '''
+    1-	Titulo: Home
+
+    2-	Descripcion: This path operation take us to home page
+    
+    3-	Parametros: No parameters
+        
+    
+    4-	Resultado: returns hello world in home page.
+    '''
     return {"Hello": "World"}
 
 #Request and Response body
@@ -143,9 +164,21 @@ def home():
     "/person/new", 
     response_model=PersonOut,
     status_code=status.HTTP_201_CREATED,
-    tags=["Persons"]
+    tags=["Persons"],
+    summary="Create person in the app"
     )
 def create_person(person: Person = Body(...)):
+    '''
+    1-	Titulo: Create Person
+
+    2-	Descripcion: This path operation creates a person in the app and save the information in the database
+    
+    3-	Parametros: 
+        -	Request Body parameter:
+            - **person: Person** -> A person model with first, last name, age, haricolor, ismarried.
+    
+    4-	Resultado: returns a person model with first name, last name, age, hair color and marital status.
+    '''
     return person
 
 # Validaciones: Query Parameters
@@ -170,6 +203,20 @@ def show_person(
         description="This is the person age. Its required"
         )
 ):
+    '''
+    1-	Titulo: Person details
+
+    2-	Descripcion: This path operation query the person details
+    
+    3-	Parametros: 
+        
+        -Query parameter: name: Optional[str] -> Person name with min and max length.
+        
+        -Query parameter: name: str -> mandatory, its the person age.
+        
+    
+    4-	Resultado: returns a JSON with name: age.
+    '''
     return {name: age}
 
 # Validations: Path Parameters
@@ -187,6 +234,18 @@ def show_person(
                 description="Showing id person"
                 ),          
 ):
+    '''
+    1-	Titulo: Person_id
+
+    2-	Descripcion: This path operation shows the person_id
+    
+    3-	Parametros: 
+        
+        -Path parameter: person_id: int -> mandatory, minimum 1 as a value
+        
+    
+    4-	Resultado: If person_id is not in list persons, raise a exception "This person doesnt exist". Else, returns a JSON with the int and message "It exists".
+    '''
     if person_id not in persons:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -211,6 +270,19 @@ def update_person(
     person: Person = Body(...),
     # location: Location = Body(...)
 ):
+    '''
+    1-	Titulo: Update Person
+
+    2-	Descripcion: This path operation updates Person data
+    
+    3-	Parametros: 
+        
+        -Path parameter: person_id: int -> mandatory, shows Person by the id (int)
+        
+        -Body request: person: Person -> Require, fill the Person model data
+    
+    4-	Resultado: returns a JSON with Person model data filled.
+    '''
     # results = person.dict()
     # results.update(location.dict())
     # return results
@@ -225,6 +297,20 @@ def update_person(
     tags=["Login"]
 )
 def login(username: str = Form(...), password: str = Form(...)):
+    '''
+    1-	Titulo: Login Form
+
+    2-	Descripcion: This path operation is for the Login Form
+    
+    3-	Parametros: 
+        
+        -Form: username: str -> require, str of the username
+
+        -Form: password: sstr -> require, str of the password
+        
+    
+    4-	Resultado: returns only the username.
+    '''
     return LoginOut(username=username)
 
 #Cookies and Headers Parameters
@@ -253,6 +339,27 @@ def contact(
     user_agent: Optional[str] = Header(default=None),
     ads: Optional[str] = Cookie(default=None)
 ):
+    '''
+    1-	Titulo: Cookies and Headers parameters
+
+    2-	Descripcion: This path operation sends a contact message from client data
+    
+    3-	Parametros: 
+        
+        -Form: first_name: str -> require first, str, name of client with max and min length.
+
+        -Form: last_name: str -> require last, str, name of client with max and min length.
+
+        -Form: email: EmailStr -> require email of client
+
+        -Form: message: str -> require the message of client with min length.
+
+        -Header: user_agent: str -> user_agent of client, optional.
+
+        -Cookie: ads: str -> Cookie of client, optional.
+            
+    4-	Resultado: returns header of user_agent.
+    '''
     return user_agent
 
 
@@ -265,6 +372,17 @@ def contact(
 def post_image(
     image: UploadFile = File(...)
 ):
+    '''
+    1-	Titulo: Post Image, File
+
+    2-	Descripcion: This path operation post a file image
+    
+    3-	Parametros: 
+        
+        -File: image: UploadFile -> require the user to upload a file image from his PC
+            
+    4-	Resultado: returns the file name, the format of file, and the size in kb.
+    '''
     return {
         "Filename": image.filename,
         "Format": image.content_type,
